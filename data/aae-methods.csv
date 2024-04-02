@@ -1,0 +1,9 @@
+Emission category,Sub-category,Expected source,Samples,Methodology
+Vehicular emissions,Diesel pick-up trucks,ff ,3,Controlled vehicle experiment
+,Traffic roads,ff ,3,Mobile monitoring on three roads during heavy traffic hours
+Open waste burning,Plastics,ff ,3,Controlled burning experiments
+,Textiles,ff ,3,Controlled burning experiments
+,Cardboard and paper,bb,3,Controlled burning experiments
+,Garden waste,bb,3,Controlled burning experiments
+,Mixed waste,depends on composition,6,Monitored known dumps
+Cooking,Firewood,bb,3,Monitored at a cooking place at three different times
