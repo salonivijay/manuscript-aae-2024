@@ -292,9 +292,7 @@ p_aae_mix <- data_p_aae_mix|>
 
 p_aae_mix
 
-data_aae <- bind_rows(data_p_aae_ff, data_p_aae_bb, data_p_aae_mix)
-
-write_csv(data_aae, "data/data-figures/data_aae_values_fig.csv")
+write_csv(aae_all, "data/data-figures/data_aae_values_fig.csv")
 
 # calculate coefficient of determination of AAE values of ff and bb sources -----------------------------------------
 
