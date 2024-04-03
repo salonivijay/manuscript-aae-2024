@@ -196,13 +196,15 @@ color_pal <- c("black", "brown", "blue")
 
 ## aae of ff
 
-p_aae_ff <-  aae_summary |>
+data_p_aae_ff <-  aae_summary |>
   pivot_longer(cols = starts_with(c("mean","sd")), names_to = c("mean_sd", "type"), names_pattern = '(mean_aae|sd_aae)_(raw|wo_bg_corr|bg_corr)', values_to = "aae")|>
   pivot_wider(names_from = mean_sd, values_from = aae)|>
   arrange(by = root_source) |>
   filter(root_source == "ff") |> 
   mutate(type = factor(type, levels = c("raw", "wo_bg_corr", "bg_corr"))) |> 
-  mutate(root_source = factor(root_source, levels = c("ff", "bb", "mixed"))) |> 
+  mutate(root_source = factor(root_source, levels = c("ff", "bb", "mixed"))) 
+
+p_aae_ff <- data_p_aae_ff |> 
   ggplot(aes(x= reorder(emission_source, mean_aae), y = mean_aae, color = type)) +
   geom_pointrange(aes(ymin = mean_aae - sd_aae, ymax = mean_aae + sd_aae), 
                   position = position_dodge(width = 0.6),
@@ -226,13 +228,15 @@ p_aae_ff
 
 ## aae of bb
 
-p_aae_bb <-  aae_summary |>
+data_p_aae_bb <-  aae_summary |>
   pivot_longer(cols = starts_with(c("mean","sd")), names_to = c("mean_sd", "type"), names_pattern = '(mean_aae|sd_aae)_(raw|wo_bg_corr|bg_corr)', values_to = "aae")|>
   pivot_wider(names_from = mean_sd, values_from = aae)|>
   arrange(by = root_source) |>
   filter(root_source == "bb") |> 
   mutate(type = factor(type, levels = c("raw", "wo_bg_corr", "bg_corr"))) |> 
-  mutate(root_source = factor(root_source, levels = c("ff", "bb", "mixed"))) |> 
+  mutate(root_source = factor(root_source, levels = c("ff", "bb", "mixed"))) 
+
+p_aae_bb <- data_p_aae_bb |> 
   ggplot(aes(x= reorder(emission_source, mean_aae), y = mean_aae, color = type)) +
   geom_pointrange(aes(ymin = mean_aae - sd_aae, ymax = mean_aae + sd_aae), 
                   position = position_dodge(width = 0.6),
@@ -257,11 +261,13 @@ p_aae_bb <-  aae_summary |>
 
 p_aae_bb
 
-p_aae_mix <-  aae_summary |>
+data_p_aae_mix <-  aae_summary |>
   pivot_longer(cols = starts_with(c("mean","sd")), names_to = c("mean_sd", "type"), names_pattern = '(mean_aae|sd_aae)_(raw|wo_bg_corr|bg_corr)', values_to = "aae")|>
   pivot_wider(names_from = mean_sd, values_from = aae)|>
   filter(root_source == "mixed") |> 
-  mutate(type = factor(type, levels = c("raw", "wo_bg_corr", "bg_corr"))) |> 
+  mutate(type = factor(type, levels = c("raw", "wo_bg_corr", "bg_corr"))) 
+
+p_aae_mix <- data_p_aae_mix|> 
   ggplot(aes(x= reorder(emission_source, mean_aae), y = mean_aae, color = type)) +
   geom_pointrange(aes(ymin = mean_aae - sd_aae, ymax = mean_aae + sd_aae), 
                   position = position_dodge(width = 0.6),
@@ -285,6 +291,10 @@ p_aae_mix <-  aae_summary |>
                                           linetype = 2))
 
 p_aae_mix
+
+data_aae <- bind_rows(data_p_aae_ff, data_p_aae_bb, data_p_aae_mix)
+
+write_csv(data_aae, "data/data-figures/data_aae_values_fig.csv")
 
 # calculate coefficient of determination of AAE values of ff and bb sources -----------------------------------------
 
