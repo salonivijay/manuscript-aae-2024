@@ -205,6 +205,7 @@ data_p_aae_ff <-  aae_summary |>
   mutate(root_source = factor(root_source, levels = c("ff", "bb", "mixed"))) 
 
 p_aae_ff <- data_p_aae_ff |> 
+  filter(wavelength == "blue_ir") |>
   ggplot(aes(x= reorder(emission_source, mean_aae), y = mean_aae, color = type)) +
   geom_pointrange(aes(ymin = mean_aae - sd_aae, ymax = mean_aae + sd_aae), 
                   position = position_dodge(width = 0.6),
@@ -237,6 +238,8 @@ data_p_aae_bb <-  aae_summary |>
   mutate(root_source = factor(root_source, levels = c("ff", "bb", "mixed"))) 
 
 p_aae_bb <- data_p_aae_bb |> 
+  filter(wavelength == "blue_ir",
+         ) |>
   ggplot(aes(x= reorder(emission_source, mean_aae), y = mean_aae, color = type)) +
   geom_pointrange(aes(ymin = mean_aae - sd_aae, ymax = mean_aae + sd_aae), 
                   position = position_dodge(width = 0.6),
@@ -260,6 +263,34 @@ p_aae_bb <- data_p_aae_bb |>
                                           linetype = 2))
 
 p_aae_bb
+library(patchwork)
+
+p_aae_ff + p_aae_bb + plot_layout(guides = "collect")
+
+aae_summary |>
+  pivot_longer(cols = starts_with(c("mean","sd")), names_to = c("mean_sd", "type"), names_pattern = '(mean_aae|sd_aae)_(raw|wo_bg_corr|bg_corr)', values_to = "aae")|>
+  pivot_wider(names_from = mean_sd, values_from = aae) |>
+  arrange(by = root_source) |>
+  filter(!emission_source %in% "Mixed waste",
+         wavelength == "blue_ir",
+         type == "bg_corr") |>
+  #mutate(type = factor(type, levels = c("raw", "wo_bg_corr", "bg_corr"))) |> 
+  mutate(root_source = factor(root_source, levels = c("ff", "bb", "mixed"))) |> 
+  ggplot(aes(x= reorder(emission_source, mean_aae), y = mean_aae, color = root_source)) +
+  geom_pointrange(aes(ymin = mean_aae - sd_aae, ymax = mean_aae + sd_aae), 
+                  position = position_dodge(width = 0.2)) +
+  geom_hline(yintercept = c(1), color = "black") +
+  geom_hline(yintercept = c(2), color = "brown") +
+  scale_y_continuous(breaks = seq(0,3, 0.25)) +
+  coord_cartesian(ylim = c(0.75,2.5)) +
+  labs(x = "Emission source",
+       y = "AAE values (mean and sd)") +
+  facet_wrap(~wavelength,
+             labeller = labeller(wavelength = wavelength.labs)) +
+  guides(color=guide_legend(title="Source type")) +
+  theme +
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
+
 
 data_p_aae_mix <-  aae_summary |>
   pivot_longer(cols = starts_with(c("mean","sd")), names_to = c("mean_sd", "type"), names_pattern = '(mean_aae|sd_aae)_(raw|wo_bg_corr|bg_corr)', values_to = "aae")|>
@@ -610,12 +641,15 @@ p_aae_verification <- ggplot() +
        y = "Latitude") +
   scale_color_manual(values = c("brown", "black", "blue"), labels = c("> 1.63 (biomass-based)", "< 1.29 (fossil-fuel-based)", "1.29-1.63 (mix of two)")) +
   theme(panel.border = element_rect(color = "black", size = 1, linetype = "solid", fill = alpha("black", 0))) + 
-  theme + # Add thick border
-  theme(legend.background = element_rect(linetype = 1, size = 0.1, colour = 1),
-        legend.position = c(0.99, 0.99),
-        legend.title = element_text(size=11),
-        legend.text = element_text(size=11), #change legend title font size
-        legend.justification = c("right", "top"),
-        legend.box.just = "right",
-        legend.margin = margin(1, 1, 1, 1)) 
+  theme  # Add thick border
+  # theme(legend.background = element_rect(linetype = 1, size = 0.1, colour = 1),
+  #       legend.position = c(0.99, 0.99),
+  #       legend.title = element_text(size=11),
+  #       legend.text = element_text(size=11), #change legend title font size
+  #       legend.justification = c("right", "top"),
+  #       legend.box.just = "right",
+  #       legend.margin = margin(1, 1, 1, 1)) 
+
+p_aae_verification
+
 
