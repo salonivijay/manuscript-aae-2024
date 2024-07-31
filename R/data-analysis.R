@@ -265,7 +265,7 @@ p_aae_bb <- data_p_aae_bb |>
 p_aae_bb
 library(patchwork)
 
-p_aae_ff + p_aae_bb + plot_layout(guides = "collect")
+p_aae <- p_aae_ff + p_aae_bb + plot_layout(guides = "collect")
 
 aae_summary |>
   pivot_longer(cols = starts_with(c("mean","sd")), names_to = c("mean_sd", "type"), names_pattern = '(mean_aae|sd_aae)_(raw|wo_bg_corr|bg_corr)', values_to = "aae")|>
@@ -652,4 +652,9 @@ p_aae_verification <- ggplot() +
 
 p_aae_verification
 
-
+ggsave("p_aae.tiff", 
+       plot = p_aae,  # your plot object
+       width = 10,  # width in inches
+       height = 5, # height in inches
+       dpi = 300,  # resolution
+       device = "tiff")
