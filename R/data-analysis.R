@@ -22,6 +22,8 @@ library(sf)
 library(basemapR)
 library(hms)
 library(broom)
+library(patchwork)
+
 
 # read files --------------------------------------------------------------
 
@@ -39,14 +41,20 @@ parameters <- read_csv(here::here("data/MA200-parameters.csv"))
 
 # define a common plot theme ----------------------------------------------
 
-theme <- theme(axis.text.y   = element_text(size=12),
-               axis.text.x   = element_text(size=12),
-               axis.title.y  = element_text(size=14),
-               axis.title.x  = element_text(size=14),
-               panel.background = element_rect(fill='transparent'), #transparent panel bg.
-               plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg.
-               axis.line = element_line(colour = "black"),
-               panel.border = element_rect(colour = "black", fill=NA, size=0.5))
+theme <- theme(axis.text.y   = element_text(size=7),
+               axis.text.x   = element_text(size=7),
+               axis.title.y  = element_text(size=8),
+               axis.title.x  = element_text(size=8),
+               legend.title = element_text(size = 8),# Legend title
+               legend.text = element_text(size = 7),
+               #panel.background = element_rect(fill='transparent'), #transparent panel bg.
+               #plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg.
+               #axis.line = element_line(colour = "black"),
+               panel.border = element_rect(colour = "black", fill=NA, size=0.5),
+               axis.line = element_line(),
+               axis.line.x = element_blank(),
+               axis.line.y = element_blank(),
+               panel.background = element_rect(fill = "white"))
 
 # sensor collocation ------------------------------------------------------
 
@@ -205,25 +213,32 @@ data_p_aae_ff <-  aae_summary |>
   mutate(root_source = factor(root_source, levels = c("ff", "bb", "mixed"))) 
 
 p_aae_ff <- data_p_aae_ff |> 
-  filter(wavelength == "blue_ir") |>
   ggplot(aes(x= reorder(emission_source, mean_aae), y = mean_aae, color = type)) +
-  geom_pointrange(aes(ymin = mean_aae - sd_aae, ymax = mean_aae + sd_aae), 
+  geom_pointrange(aes(ymin = mean_aae - sd_aae, 
+                      ymax = mean_aae + sd_aae), 
                   position = position_dodge(width = 0.6),
-                  size = 0.2) +
+                  size = 0.05) +
   geom_hline(yintercept = 1, color = "black") +
   #geom_hline(yintercept = 2, color = "brown") + 
   #scale_color_manual(values=c("black", "brown", "blue")) +
-  scale_color_discrete(labels=c('Raw data', 'Without babs below background', 'Background correction')) +
+  scale_color_discrete(labels=c('Raw data', 
+                                'Without babs below background', 
+                                'Background correction')) +
+  guides(colour=guide_legend(title="AAE calculation method",
+         ncol= 1,
+         byrow=TRUE,
+         title.position="top")) +
   labs(x = "Emission source",
        y = "AAE values (mean and sd)") +
   facet_grid(root_source~wavelength,
              labeller = labeller(wavelength = wavelength.labs)) +
-  guides(color=guide_legend(title="AAE calculation method")) +
   theme +
   theme(axis.text.x = element_text(angle = 45, hjust=1),
         panel.grid.major.y = element_line(color = "gray",
-                                          size = 0.5,
-                                          linetype = 2))
+                                          size = 0.2,
+                                          linetype = 2),
+        strip.text = element_text(size = 7,
+                                  margin = margin(0.1, 0.1, 0.1, 0.1)))
 
 p_aae_ff
 
@@ -238,12 +253,10 @@ data_p_aae_bb <-  aae_summary |>
   mutate(root_source = factor(root_source, levels = c("ff", "bb", "mixed"))) 
 
 p_aae_bb <- data_p_aae_bb |> 
-  filter(wavelength == "blue_ir",
-         ) |>
   ggplot(aes(x= reorder(emission_source, mean_aae), y = mean_aae, color = type)) +
   geom_pointrange(aes(ymin = mean_aae - sd_aae, ymax = mean_aae + sd_aae), 
                   position = position_dodge(width = 0.6),
-                  size = 0.2) +
+                  size = 0.05) +
   #geom_hline(yintercept = 1, color = "black") +
   geom_hline(yintercept = 2, color = "brown") + 
   #scale_color_manual(values=c("black", "brown", "blue")) +
@@ -252,18 +265,20 @@ p_aae_bb <- data_p_aae_bb |>
        y = "AAE values (mean and sd)") +
   facet_grid(root_source~wavelength,
              labeller = labeller(wavelength = wavelength.labs)) +
-  guides(color=guide_legend(title="AAE calculation method")) +
+  guides(color=guide_legend(title="AAE calculation method",
+         nrow=3,
+         byrow=TRUE,
+         title.position="top")) +
   theme +
   theme(axis.text.x = element_text(angle = 45, hjust=1),
         panel.grid.major.y = element_line(color = "gray",
-                                          size = 0.5,
+                                          size = 0.2,
                                           linetype = 2),
         panel.grid.minor.y = element_line(color = "gray",
-                                          size = 0.5,
-                                          linetype = 2))
-
+                                          size = 0.2,
+                                          linetype = 2),
+        strip.text = element_text(size = 7, margin = margin(0.1, 0.1, 0.1, 0.1)))
 p_aae_bb
-library(patchwork)
 
 p_aae <- p_aae_ff + p_aae_bb + plot_layout(guides = "collect")
 
@@ -399,12 +414,12 @@ lmfit_aae_r2$variable_2 <- recode(lmfit_aae_r2$variable_2,
 
 ## final table with selected variables
 
-table_aaer2 <- lmfit_aae_r2 |> 
-  rename(`Variable 1` = variable_1,
-         `Variable 2` = variable_2,
-         `R2` = r.squared,
-         `R2-adjusted` = adj.r.squared) |>
-  select(`Variable 1`, `Variable 2`, `R2`, `R2-adjusted`) 
+table_aaer2 <- lmfit_aae_r2 
+#   # rename(`Variable 1` = variable_1,
+#   #        `Variable 2` = variable_2,
+#   #        `R2` = r.squared,
+#   #        `R2-adjusted` = adj.r.squared) |>
+#   select(`Variable 1`, `Variable 2`, `R2`, `R2-adjusted`) 
 
 # calculate coefficient of determination of AAE values of mixed waste -----------------------------------------
 
@@ -468,12 +483,12 @@ lmfit_aae_r2_mix$variable_2 <- recode(lmfit_aae_r2_mix$variable_2,
                                       aae_bg_corr_blue_ir = 'AAE- background correction (475/880 nm)',
                                       aae_wo_bg_corr_blue_ir = 'AAE- without babs below background (475/880 nm)')
 
-table_aaer2_mix <- lmfit_aae_r2_mix |> 
-  rename("Variable 1" = variable_1,
-         `Variable 2` = variable_2,
-         `R2` = r.squared,
-         `R2-adjusted` = adj.r.squared) |>
-  select(`Variable 1`, `Variable 2`, `R2`, `R2-adjusted`) 
+table_aaer2_mix <- lmfit_aae_r2_mix 
+  # rename("Variable 1" = variable_1,
+  #        `Variable 2` = variable_2,
+  #        `R2` = r.squared,
+  #        `R2-adjusted` = adj.r.squared) |>
+  # select(`Variable 1`, `Variable 2`, `R2`, `R2-adjusted`) 
 
 # t-test on AAE values ----------------------------------------------------
 
@@ -542,14 +557,21 @@ my_colors <- ifelse(melt_aae$value == "", "black",
 
 p_aae_t_test <- melt_aae |> 
   ggplot(aes(x = X1, y = X2)) +
-  geom_tile(aes(fill = similar.not_similar), width=0.7, height=0.7) +
-  geom_text(aes(label = value), color = "white") +
-  scale_fill_manual(values = c("white", "maroon", "darkgreen"), labels = c("", "<0.05", ">0.05")) +
+  geom_tile(aes(fill = similar.not_similar), 
+            width=0.7, 
+            height=0.7) +
+  geom_text(aes(label = value), 
+            color = "white",
+            size = 1.7) +
+  scale_fill_manual(values = c("white", "maroon", "darkgreen"), 
+                    labels = c("", "<0.05", ">0.05")) +
   guides(fill=guide_legend(title="p-value")) +
   labs(x = "Emission source",
        y = "Emission source") +
+  coord_fixed() +
   theme +
-  theme(axis.text.x = element_text(angle = 45, hjust=1))
+  theme(axis.text.x = element_text(angle = 45, hjust=1),
+        legend.key.size = unit(0.35, "cm"))   # Legend text)
 
 p_aae_t_test
 
@@ -624,37 +646,89 @@ df_settlement <- tibble(
 map_data_sf <- st_as_sf(df_map, coords = c("long", "lat"))
 
 p_aae_verification <- ggplot() +
-  base_map(st_bbox(map_data_sf), basemap = "mapnik", increase_zoom = 3) +
+  base_map(st_bbox(map_data_sf), 
+           basemap = "mapnik", 
+           increase_zoom = 3) +
   geom_path(data = df_map, 
             aes(x = long, 
                 y = lat, 
                 group = as.factor(id), 
                 color = root_source), 
-            size = 2) +
+            size = 0.8) +
   geom_text(data = df_settlement,
             aes(x = long,
                 y = lat,
                 label = settlement_id),
-            size = 5) +
-  guides(color=guide_legend(title="AAE470/880 (Emission source)")) +
+            size = 2.5) +
+  guides(color=guide_legend(title="AAE470/880 (Emission source)",
+                            nrow=3,
+                            byrow=TRUE,
+                            title.position="top")
+         ) +
   labs(x = "Longitude",
        y = "Latitude") +
-  scale_color_manual(values = c("brown", "black", "blue"), labels = c("> 1.63 (biomass-based)", "< 1.29 (fossil-fuel-based)", "1.29-1.63 (mix of two)")) +
-  theme(panel.border = element_rect(color = "black", size = 1, linetype = "solid", fill = alpha("black", 0))) + 
-  theme  # Add thick border
+  scale_color_manual(values = c("brown", "black", "blue"), 
+                     labels = c("> 1.63 (biomass-based)", 
+                                "< 1.29 (fossil-fuel-based)", 
+                                "1.29-1.63 (mix of two)")) +
+  coord_fixed() +
+  #theme(panel.border = element_rect(color = "black", size = 1, linetype = "solid", fill = alpha("black", 0))) + 
+  theme  +
+  theme(legend.position = "bottom",
+        legend.box="horizontal",
+        legend.margin = margin(0.05, 0.05, 0.05, 0.05, "cm"),
+        legend.spacing.y = unit(0, 'cm'),
+        legend.key.height = unit(0.3, "cm"), 
+        legend.box.background = element_rect(color = "black", 
+                                             size = 0.1),
+        legend.text = element_text(margin = margin(t = 0, b = 0)))
+  # guides(colour = guide_colourbar(title.position="top", title.hjust = 0.5),
+  #        size = guide_legend(title.position="top", title.hjust = 0.5))
   # theme(legend.background = element_rect(linetype = 1, size = 0.1, colour = 1),
   #       legend.position = c(0.99, 0.99),
   #       legend.title = element_text(size=11),
   #       legend.text = element_text(size=11), #change legend title font size
   #       legend.justification = c("right", "top"),
   #       legend.box.just = "right",
-  #       legend.margin = margin(1, 1, 1, 1)) 
+  #       ) 
 
 p_aae_verification
 
-ggsave("p_aae.tiff", 
-       plot = p_aae,  # your plot object
-       width = 10,  # width in inches
-       height = 5, # height in inches
-       dpi = 300,  # resolution
-       device = "tiff")
+ggsave(
+  filename = "p_aae_t_test.jpeg",  # Name of the output file
+  plot = p_aae_t_test,                         # The ggplot object
+  width = 8.9,                            # Width in cm for single-column (3.5 inches)
+  height = 6.5,                           # Height in cm (can be adjusted as needed)
+  dpi = 300,
+  units = "cm", # Units for width and height
+)
+
+ggsave(
+  filename = "p_aae_verification.jpeg",  # Name of the output file
+  plot = p_aae_verification,                         # The ggplot object
+  width = 8.9,                            # Width in cm for single-column (3.5 inches)
+  height = 8.9,                           # Height in cm (can be adjusted as needed)
+  dpi = 300,
+  units = "cm", # Units for width and height
+)
+
+p_aae <- p_aae_ff / p_aae_bb + 
+  plot_annotation(tag_levels = 'a') + 
+  plot_layout(guides = "collect") & 
+  theme(plot.tag = element_text(size = 11),
+        legend.position = "bottom",
+        legend.margin = margin(0.05, 0.05, 0.05, 0.05, "cm"),
+        #legend.spacing.x = unit(0, 'cm'),
+        legend.key.height = unit(0.3, "cm"), 
+        legend.box.background = element_rect(color = "black", 
+                                             size = 0.1),
+        legend.text = element_text(margin = margin(t = 0, b = 0)))
+
+ggsave(
+  filename = "p_aae.jpeg",  # Name of the output file
+  plot = p_aae,                         # The ggplot object
+  width = 8.9,                            # Width in cm for single-column (3.5 inches)
+  height = 14,                           # Height in cm (can be adjusted as needed)
+  dpi = 300,
+  units = "cm", # Units for width and height
+)
