@@ -41,12 +41,12 @@ parameters <- read_csv(here::here("data/MA200-parameters.csv"))
 
 # define a common plot theme ----------------------------------------------
 
-theme <- theme(axis.text.y   = element_text(size=7),
-               axis.text.x   = element_text(size=7),
-               axis.title.y  = element_text(size=8),
-               axis.title.x  = element_text(size=8),
-               legend.title = element_text(size = 8),# Legend title
-               legend.text = element_text(size = 7),
+theme <- theme(axis.text.y   = element_text(size=6),
+               axis.text.x   = element_text(size=6),
+               axis.title.y  = element_text(size=7),
+               axis.title.x  = element_text(size=7),
+               legend.title = element_text(size = 7),# Legend title
+               legend.text = element_text(size = 6),
                #panel.background = element_rect(fill='transparent'), #transparent panel bg.
                #plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg.
                #axis.line = element_line(colour = "black"),
@@ -54,7 +54,8 @@ theme <- theme(axis.text.y   = element_text(size=7),
                axis.line = element_line(),
                axis.line.x = element_blank(),
                axis.line.y = element_blank(),
-               panel.background = element_rect(fill = "white"))
+               panel.background = element_rect(fill = "white"),
+               plot.margin = margin(0,0,0,0))
 
 # sensor collocation ------------------------------------------------------
 
@@ -707,20 +708,20 @@ ggsave(
   filename = "p_aae_verification.jpeg",  # Name of the output file
   plot = p_aae_verification,                         # The ggplot object
   width = 8.9,                            # Width in cm for single-column (3.5 inches)
-  height = 8.9,                           # Height in cm (can be adjusted as needed)
+  height = 7,                           # Height in cm (can be adjusted as needed)
   dpi = 300,
   units = "cm", # Units for width and height
 )
 
-p_aae <- p_aae_ff / p_aae_bb + 
-  plot_annotation(tag_levels = 'a') + 
-  plot_layout(guides = "collect") & 
+p_aae <- p_aae_ff / p_aae_bb +
+  plot_annotation(tag_levels = 'a') +
+  plot_layout(guides = "collect") &
   theme(plot.tag = element_text(size = 11),
         legend.position = "bottom",
         legend.margin = margin(0.05, 0.05, 0.05, 0.05, "cm"),
         #legend.spacing.x = unit(0, 'cm'),
-        legend.key.height = unit(0.3, "cm"), 
-        legend.box.background = element_rect(color = "black", 
+        legend.key.height = unit(0.3, "cm"),
+        legend.box.background = element_rect(color = "black",
                                              size = 0.1),
         legend.text = element_text(margin = margin(t = 0, b = 0)))
 
